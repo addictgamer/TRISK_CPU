@@ -1,6 +1,9 @@
+; Initialize registers with default values.
 LDI A 4
 LDI B 2
-ADD A B
 LDI C 255
-RAM A C
+
+ADD A B ; A += B 
+RAM A C ; Store result
+
 HALT

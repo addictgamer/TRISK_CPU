@@ -53,7 +53,7 @@
  *
  *	You should end your program with halt, otherwise it will loop through RAM forever, and possibly might have unintended consequences.
  *
- *	TODO: Comments support.
+ *	Use semicolon (;) for comments.
  *
  *	TODO: Test labels.
  *
@@ -870,7 +870,7 @@ public:
 		{
 			std::cout << "Error: Redefinition of label \" " << name << "\"\n";
 			//return false;
-			throw;
+			throw 0;
 		}
 
 		*(name.end() - 1) = '\0'; //Get rid of the trailing colon.
@@ -878,7 +878,7 @@ public:
 		if ((instructions_iter = instructions.find(name)) != instructions.end() || name == "BYTE")
 		{
 			std::cout << "Error: Reserved keyword \"" << name << "\".\n";
-			throw;
+			throw 0;
 		}
 
 		std::cout << "[DEBUG] Adding label: \"" << name << "\n";
@@ -892,7 +892,7 @@ public:
 		if ((labels_iter = labels.find(name)) == labels.end())
 		{
 			std::cout << "Error: Undefined label \" " << name << "\"\n";
-			throw;
+			throw 0;
 		}
 
 		return labels[name];
@@ -933,7 +933,7 @@ public:
 				{
 					//Overflowed program memory, not enough space.
 					std::cout << "Error: Program exceeds max size allowed on this architecture!\n";
-					throw;
+					throw 0;
 				}
 				address += (*instructions_iter).second->instruction_size;
 				source_counter += (*instructions_iter).second->num_parameters;
@@ -946,7 +946,7 @@ public:
 				{
 					//Overflowed program memory, not enough space.
 					std::cout << "Error: Program exceeds max size allowed on this architecture!\n";
-					throw;
+					throw 0;
 				}
 				++address;
 				continue;
@@ -967,9 +967,44 @@ public:
 			{
 				//Overflowed program memory, not enough space.
 				std::cout << "Error: Program exceeds max size allowed on this architecture!\n";
-				throw;
+				throw 0;
 			}
 			++address;
+		}
+	}
+
+	void stripComments(std::ifstream& source_code, std::vector<std::string> &symbols_list)
+	{
+		std::string line;
+		std::vector<std::string> lines;
+
+		std::size_t comment_index;
+		while (std::getline(source_code, line))
+		{
+			comment_index = line.find(";");
+			if (comment_index != std::string::npos)
+			{
+				line.erase(comment_index + 1, line.size());
+				line[comment_index] = '\0';
+			}
+
+			lines.push_back(line);
+		}
+
+		std::string symbol = "";
+		for (std::vector<std::string>::iterator i = lines.begin(); i < lines.end(); ++i)
+		{
+			std::stringstream ss(*i);
+
+			while (ss >> symbol)
+			{
+				if (symbol[0] != '\0') //Ignore kludge left over after comment cutting.
+				{
+					symbols_list.push_back(symbol);
+					std::cout << "Read in: \"" << symbol << "\"\n";
+				}
+				symbol = "";
+			}
 		}
 	}
 
@@ -1011,10 +1046,10 @@ public:
 				memory[address] = label;
 				return 1; //Wrote out 1 byte.
 			}
-			catch(...)
+			catch (...)
 			{
 				std::cout << "Error: Invalid instruction \" " << source_symbol << "\"\n";
-				throw;
+				throw 0;
 			}
 		}
 
@@ -1044,7 +1079,7 @@ public:
 		if (bytes_written == 0)
 		{
 			//Error.
-			throw;
+			throw 0;
 		}
 		return 0; //The instruction's parse function automatically increments this.
 	}
@@ -1093,23 +1128,25 @@ public:
 
 		//Break the file up into an array of words:std::string file_contents;
 
-		std::string symbol;
-
-		while (input_file >> symbol)
+		try
 		{
-			sourcecode.push_back(symbol);
-			std::cout << "Read in: \"" << symbol << "\"\n";
-			symbol = "";
+			parser.stripComments(input_file, sourcecode);
+		}
+		catch (...)
+		{
+			input_file.close();
+			return false;
 		}
 
 		input_file.close();
+
 
 		//Preprocessor.
 		try
 		{
 			parser.preprocess(sourcecode);
 		}
-		catch(...)
+		catch (...)
 		{
 			return false;
 		}
@@ -1124,7 +1161,7 @@ public:
 				address += parser.parseInstruction(sourcecode, source_pointer, address, memory);
 			}
 		}
-		catch(...)
+		catch (...)
 		{
 			return false;
 		}

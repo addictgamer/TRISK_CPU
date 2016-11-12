@@ -375,7 +375,6 @@ private:
 	//0xA? 1010_xxyy -- x >>= y
 	void opRightShift(uint8_t x, uint8_t y)
 	{
-		//std::cout << "[opRightShift()] *** UNIMPLEMENTED OP CODE *** (0xA0 to 0xAF :: opRightShift())\n";
 		//std::cout << "[opRightShift()] Register " << static_cast<uint16_t>(x) << " >>= register " << static_cast<uint16_t>(y) << ".\n";
 
 		regbank.setRegister(x, alu.bitwiseRightShift(regbank.getRegister(x), regbank.getRegister(y), false));
