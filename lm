@@ -17,3 +17,4 @@ rm ./tem
 rm ./tas
 cp ./build/debug/tem ./tem
 cp ./build/debug/tas ./tas
+cp ./build/debug/bin2logisim ./bin2logisim

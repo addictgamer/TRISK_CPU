@@ -1,3 +1,1 @@
 TODO:
- * Comment support for assembler
- * Implement remaining ALU instructions.

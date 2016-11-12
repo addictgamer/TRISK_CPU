@@ -1218,7 +1218,14 @@ int main(int argc, char **argv)
 	//Parse command line parameters.
 	for (int i = 1; (i < argc) && (i < 3); ++i)
 	{
-		input_file = std::string(argv[i]);
+		if (i == 1)
+		{
+			input_file = std::string(argv[i]);
+		}
+		else if (i == 2)
+		{
+			output_file = std::string(argv[i]);
+		}
 	}
 
 	Program program;

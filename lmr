@@ -17,3 +17,4 @@ rm ./tem
 rm ./tas
 cp ./build/release/tem ./tem
 cp ./build/release/tas ./tas
+cp ./build/release/bin2logisim ./bin2logisim

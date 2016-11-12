@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <iostream>
 #include <fstream>
+#include <cstring>
 
 //Bitwise functions:
 uint8_t setBit(uint8_t number, uint8_t bit, uint8_t value)
@@ -734,7 +735,15 @@ public:
 	}
 };
 
-int main()
+void displayUsageInstructions(std::string default_input, std::string default_output)
+{
+	std::cout << "Program usage: \n" \
+			<< "\n$> tem <input program file> <output RAM file>\n\n" \
+			<< "Default input: " << default_input \
+			<< "\nDefault output: " << default_output << "\n";
+}
+
+int main(int argc, char **argv)
 {
 	/*
 	 * Basically:
@@ -754,7 +763,36 @@ int main()
 	 */
 
 	std::string input_file = "program.bin";
-	std::string output_file = "output.bin";
+	std::string output_file = "ram.bin";
+
+	//I'm going to set a hard limit on the command line arguments to 3 (2 actual useable arguments) for now.
+	if (argc > 3)
+	{
+		displayUsageInstructions(input_file, output_file);
+		return 1; //Blarg. They doin' it wrong.
+	}
+
+	if (argc >= 2)
+	{
+		if (!strcmp(argv[1], "-h"))
+		{
+			displayUsageInstructions(input_file, output_file);
+			return 0;
+		}
+	}
+
+	//Parse command line parameters.
+	for (int i = 1; (i < argc) && (i < 3); ++i)
+	{
+		if (i == 1)
+		{
+			input_file = std::string(argv[i]);
+		}
+		else if (i == 2)
+		{
+			output_file = std::string(argv[i]);
+		}
+	}
 
 	CPU cpu;
 
