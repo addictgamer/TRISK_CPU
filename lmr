@@ -1,0 +1,19 @@
+#!/bin/sh
+# lmr - CMake shortcut command (release build)
+
+SOURCE_DIR=$(printf "%q" "$PWD") # escapes the dir with backslashes
+
+mkdir -p build/release
+
+cd build/release
+
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$SOURCE_DIR -G "Unix Makefiles" ../..
+
+make -j8
+
+cd ../..
+
+rm ./tem
+rm ./tas
+cp ./build/release/tem ./tem
+cp ./build/release/tas ./tas
