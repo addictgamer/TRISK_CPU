@@ -55,7 +55,12 @@
  *
  *	Use semicolon (;) for comments.
  *
- *	TODO: Test labels.
+ *	Label syntax: <labelname>:
+ *	E.g.
+ *		G1:
+ *		LDI A G1
+ *		JMP A
+ *	You may not have single-character labels. They are reserved.
  *
  */
 
@@ -866,14 +871,19 @@ public:
 	//Throws on error.
 	void addLabel(std::string name, uint8_t memory_location)
 	{
-		if ((labels_iter = labels.find(name)) != labels.end())
+		if (name.size() <= 1)
 		{
-			std::cout << "Error: Redefinition of label \" " << name << "\"\n";
-			//return false;
+			std::cout << "Error: Label too short.\n";
 			throw 0;
 		}
 
-		*(name.end() - 1) = '\0'; //Get rid of the trailing colon.
+		if ((labels_iter = labels.find(name)) != labels.end())
+		{
+			std::cout << "Error: Redefinition of label \" " << name << "\"\n";
+			throw 0;
+		}
+
+		name.erase(name.end() - 1); //Get rid of the trailing colon.
 
 		if ((instructions_iter = instructions.find(name)) != instructions.end() || name == "BYTE")
 		{
@@ -881,19 +891,18 @@ public:
 			throw 0;
 		}
 
-		std::cout << "[DEBUG] Adding label: \"" << name << "\n";
-
 		labels[name] = memory_location;
 	}
 
 	//Throws if does not find.
 	uint8_t getLabel(std::string name)
 	{
-		if ((labels_iter = labels.find(name)) == labels.end())
+		if (labels.find(name) == labels.end())
 		{
-			std::cout << "Error: Undefined label \" " << name << "\"\n";
+			std::cout << "Error: Undefined label \"" << name << "\"\n";
 			throw 0;
 		}
+
 
 		return labels[name];
 	}
@@ -906,6 +915,45 @@ public:
 		}
 
 		return name[0] - 'A'; //Only supports names A, B, C, D.
+	}
+
+	void stripComments(std::ifstream& source_code, std::vector<std::string> &symbols_list)
+	{
+		std::string line;
+		std::vector<std::string> lines;
+
+		std::size_t comment_index;
+		while (std::getline(source_code, line))
+		{
+			comment_index = line.find(";");
+			if (comment_index != std::string::npos)
+			{
+				line.erase(comment_index, line.size());
+			}
+
+			lines.push_back(line);
+		}
+
+		std::string symbol = "";
+		for (std::vector<std::string>::iterator i = lines.begin(); i < lines.end(); ++i)
+		{
+			std::stringstream ss(*i);
+
+			while (ss >> symbol)
+			{
+				if (symbol[0] != '\0') //Ignore kludge left over after comment cutting.
+				{
+					for (auto & i: symbol)
+					{
+						i = toupper(i);
+					}
+
+					symbols_list.push_back(symbol);
+					std::cout << "Read in: \"" << symbol << "\"\n";
+				}
+				symbol = "";
+			}
+		}
 	}
 
 	/*
@@ -922,10 +970,6 @@ public:
 		for (source_counter = source_code.begin(); source_counter != source_code.end(); ++source_counter)
 		{
 			source_symbol = *source_counter;
-			for (auto & i: source_symbol)
-			{
-				i = toupper(i);
-			}
 
 			if ((instructions_iter = instructions.find(source_symbol)) != instructions.end())
 			{
@@ -973,41 +1017,6 @@ public:
 		}
 	}
 
-	void stripComments(std::ifstream& source_code, std::vector<std::string> &symbols_list)
-	{
-		std::string line;
-		std::vector<std::string> lines;
-
-		std::size_t comment_index;
-		while (std::getline(source_code, line))
-		{
-			comment_index = line.find(";");
-			if (comment_index != std::string::npos)
-			{
-				line.erase(comment_index + 1, line.size());
-				line[comment_index] = '\0';
-			}
-
-			lines.push_back(line);
-		}
-
-		std::string symbol = "";
-		for (std::vector<std::string>::iterator i = lines.begin(); i < lines.end(); ++i)
-		{
-			std::stringstream ss(*i);
-
-			while (ss >> symbol)
-			{
-				if (symbol[0] != '\0') //Ignore kludge left over after comment cutting.
-				{
-					symbols_list.push_back(symbol);
-					std::cout << "Read in: \"" << symbol << "\"\n";
-				}
-				symbol = "";
-			}
-		}
-	}
-
 	/*
 	 * Paramaters:
 	 * 		source_code		- input file split up into vector of individual words/symbols
@@ -1039,18 +1048,8 @@ public:
 		//Handle instruction
 		if ((instructions_iter = instructions.find(source_symbol)) == instructions.end())
 		{
-			try
-			{
-				//Handle labels. It's either a label or an invalid symbol.
-				uint8_t label = getLabel(source_symbol);
-				memory[address] = label;
-				return 1; //Wrote out 1 byte.
-			}
-			catch (...)
-			{
-				std::cout << "Error: Invalid instruction \" " << source_symbol << "\"\n";
-				throw 0;
-			}
+			std::cout << "Error: Invalid instruction \" " << source_symbol << "\"\n";
+			throw 0;
 		}
 
 		std::vector<uint8_t> parameters;
@@ -1063,8 +1062,23 @@ public:
 			}
 			else
 			{
-				//Convert register name to number.
-				parameters.push_back(regNameToNum(*source_counter));
+				if ((*source_counter).size() > 1)
+				{
+					//It's a label.
+					try
+					{
+						parameters.push_back(getLabel(*source_counter)); //Resolve label.
+					}
+					catch (...)
+					{
+						throw 0;
+					}
+				}
+				else
+				{
+					//Is a register name. Convert register name to number.
+					parameters.push_back(regNameToNum(*source_counter));
+				}
 			}
 			++source_counter;
 		}
@@ -1081,7 +1095,7 @@ public:
 			//Error.
 			throw 0;
 		}
-		return 0; //The instruction's parse function automatically increments this.
+		return 0; //The instruction's parse function automatically increments the address, don't do it here.
 	}
 };
 

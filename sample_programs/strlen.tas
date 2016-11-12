@@ -1,0 +1,59 @@
+; This program implements the following C function:
+;
+;	unsigned int strlen(const char *p1)
+;	{
+;		unsigned count;
+;		count = 0;
+;		while (*p1)
+;		{
+;			++p1;
+;			++count;
+;		}
+;		return count;
+;	}
+
+
+; Return value is stored in register C and RAM location 255
+; Register B is p1
+
+
+
+; Initialize registers.
+LDI B p1 ; B = p1
+LDI C 0 ; C = count = 0
+
+; while (*p1)
+G1:
+	LDI A 0
+	
+	; if (*B == '0') goto G2
+	LD D B
+	CMP D A
+	LDI A G2
+	PCZ A
+	
+	; (*B != '\0')
+	LDI A 1
+	ADD B A ; ++p1
+	ADD C A ; ++count
+	LDI A G1
+	JMP A ; loop
+
+; end while.
+G2:
+	LDI A 255
+	RAM C A
+	HALT
+
+
+
+; Program data.
+p1:
+	; String 1: "Potato\0"
+	BYTE 80
+	BYTE 111
+	BYTE 116
+	BYTE 97
+	BYTE 116
+	BYTE 111
+	BYTE 0
