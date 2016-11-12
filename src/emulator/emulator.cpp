@@ -177,7 +177,7 @@ public:
 		return checkBit(flags, 0);
 	}
 
-	uint8_t add(uint8_t x, uint8_t y, bool cin)
+	uint8_t add(uint8_t x, uint8_t y, bool cin = false)
 	{
 		uint8_t sum = x + y;
 
@@ -195,7 +195,7 @@ public:
 		return sum;
 	}
 
-	uint8_t sub(uint8_t x, uint8_t y, bool cin)
+	uint8_t sub(uint8_t x, uint8_t y, bool cin = false)
 	{
 		uint8_t diff = x - y;
 
@@ -213,7 +213,7 @@ public:
 		return diff;
 	}
 
-	uint8_t bitwiseNot(uint8_t x, bool cin)
+	uint8_t bitwiseNot(uint8_t x, bool cin = false)
 	{
 		x = ~x;
 
@@ -229,7 +229,20 @@ public:
 		return x;
 	}
 
-	//TODO: Implement rest of operations.
+	uint8_t bitwiseRightShift(uint8_t x, uint8_t count, bool cin = false)
+	{
+		return x >> count;
+	}
+
+	uint8_t bitwiseAnd(uint8_t x, uint8_t y, bool cin = false)
+	{
+		return x & y;
+	}
+
+	uint8_t bitwiseOr(uint8_t x, uint8_t y, bool cin = false)
+	{
+		return x | y;
+	}
 };
 
 class CPU
@@ -362,8 +375,10 @@ private:
 	//0xA? 1010_xxyy -- x >>= y
 	void opRightShift(uint8_t x, uint8_t y)
 	{
-		//TODO: Implement.
-		std::cout << "[opRightShift()] *** UNIMPLEMENTED OP CODE *** (0xA0 to 0xAF :: opRightShift())\n";
+		//std::cout << "[opRightShift()] *** UNIMPLEMENTED OP CODE *** (0xA0 to 0xAF :: opRightShift())\n";
+		//std::cout << "[opRightShift()] Register " << static_cast<uint16_t>(x) << " >>= register " << static_cast<uint16_t>(y) << ".\n";
+
+		regbank.setRegister(x, alu.bitwiseRightShift(regbank.getRegister(x), regbank.getRegister(y), false));
 
 		++program_counter;
 	}
@@ -418,8 +433,9 @@ private:
 	//0xC? 1100_xxyy -- x &= y
 	void opBitwiseAnd(uint8_t x, uint8_t y)
 	{
-		//TODO: Implement.
-		std::cout << "[opBitwiseAnd()] *** UNIMPLEMENTED OP CODE *** (0xC0 to 0xCF :: opBitwiseAnd())\n";
+		//std::cout << "[opBitwiseAnd()] Register " << static_cast<uint16_t>(x) << " &= register " << static_cast<uint16_t>(y) << ".\n";
+
+		regbank.setRegister(x, alu.bitwiseAnd(regbank.getRegister(x), regbank.getRegister(y), false));
 
 		++program_counter;
 	}
@@ -427,8 +443,9 @@ private:
 	//0xD? 1101_xxyy -- x |= y
 	void opBitwiseOr(uint8_t x, uint8_t y)
 	{
-		//TODO: Implement.
-		std::cout << "[opBitwiseOr()] *** UNIMPLEMENTED OP CODE *** (0xD0 to 0xDF :: opBitwiseOr())\n";
+		//std::cout << "[opBitwiseOr()] Register " << static_cast<uint16_t>(x) << " |= register " << static_cast<uint16_t>(y) << ".\n";
+
+		regbank.setRegister(x, alu.bitwiseOr(regbank.getRegister(x), regbank.getRegister(y), false));
 
 		++program_counter;
 	}
@@ -518,7 +535,7 @@ public:
 
 		for (i = 0xA0; i <= 0xAF; ++i) //x >>= y
 		{
-			opcodes[i] = &CPU::opRightShift;//TODO: opRightShift()
+			opcodes[i] = &CPU::opRightShift;
 		}
 
 		for (i = 0xB0; i <= 0xBF; i += 4) //x ~= x
@@ -543,12 +560,12 @@ public:
 
 		for (i = 0xC0; i <= 0xCF; ++i) //x &= y
 		{
-			opcodes[i] = &CPU::opBitwiseAnd; //TODO: opBitwiseAnd
+			opcodes[i] = &CPU::opBitwiseAnd;
 		}
 
 		for (i = 0xD0; i <= 0xDF; ++i) //x |= y
 		{
-			opcodes[i] = &CPU::opBitwiseOr; //TODO: opBitwiseOr
+			opcodes[i] = &CPU::opBitwiseOr;
 		}
 
 		for (i = 0xE0; i <= 0xEF; ++i) //x - y
@@ -606,7 +623,7 @@ public:
 		}
 		else if (opcode >= 0xA0 && opcode <= 0xAF) //x >>= y
 		{
-			(this->*opcodes[opcode])((opcode >> 2)%4, opcode%4); //TODO opRightShift()
+			(this->*opcodes[opcode])((opcode >> 2)%4, opcode%4); //opRightShift()
 		}
 		else if (opcode >= 0xB0 && opcode <= 0xBF && (opcode%4 == 0)) //x ~= x
 		{
@@ -626,11 +643,11 @@ public:
 		}
 		else if (opcode >= 0xC0 && opcode <= 0xCF) //x &= y
 		{
-			(this->*opcodes[opcode])((opcode >> 2)%4, opcode%4); //TODO: opBitwiseAnd()
+			(this->*opcodes[opcode])((opcode >> 2)%4, opcode%4); //opBitwiseAnd()
 		}
 		else if (opcode >= 0xD0 && opcode <= 0xDF) //x |= y
 		{
-			(this->*opcodes[opcode])((opcode >> 2)%4, opcode%4); //TODO: opBitwiseOr()
+			(this->*opcodes[opcode])((opcode >> 2)%4, opcode%4); //opBitwiseOr()
 		}
 		else if (opcode >= 0xE0 && opcode <= 0xEF) //x - y
 		{
