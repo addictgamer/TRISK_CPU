@@ -949,7 +949,7 @@ public:
 					}
 
 					symbols_list.push_back(symbol);
-					std::cout << "Read in: \"" << symbol << "\"\n";
+					//std::cout << "Read in: \"" << symbol << "\"\n";
 				}
 				symbol = "";
 			}
@@ -970,6 +970,7 @@ public:
 		for (source_counter = source_code.begin(); source_counter != source_code.end(); ++source_counter)
 		{
 			source_symbol = *source_counter;
+			std::cout << "Preprocessing: \"" << source_symbol << "\"\n";
 
 			if ((instructions_iter = instructions.find(source_symbol)) != instructions.end())
 			{
@@ -993,13 +994,14 @@ public:
 					throw 0;
 				}
 				++address;
+				++source_counter; //Next symbol will be a byte to allocate.
 				continue;
 			}
 
 			if (isLabelDefinition(source_symbol))
 			{
 				addLabel(source_symbol, address);
-				source_code.erase(source_counter); //Don't process label definitions in the main assembling run.
+				source_code.erase(source_counter--); //Don't process label definitions in the main assembling run.
 				//Might be more efficient to swap this index & last, then pop off end.
 				continue;
 			}
@@ -1144,7 +1146,9 @@ public:
 
 		try
 		{
+			std::cout << " *** Stripping comments ***\n";
 			parser.stripComments(input_file, sourcecode);
+			std::cout << " *** ***\n\n\n";
 		}
 		catch (...)
 		{
@@ -1158,7 +1162,9 @@ public:
 		//Preprocessor.
 		try
 		{
+			std::cout << " *** Preprocessing (labels) ***\n";
 			parser.preprocess(sourcecode);
+			std::cout << " *** ***\n\n\n";
 		}
 		catch (...)
 		{
@@ -1169,11 +1175,13 @@ public:
 
 		try
 		{
+			std::cout << " *** Assembling File ***\n";
 			source_pointer = sourcecode.begin();
 			while (source_pointer < sourcecode.end()) //Must increment source_pointer in parser.
 			{
 				address += parser.parseInstruction(sourcecode, source_pointer, address, memory);
 			}
+			std::cout << " *** ***\n\n\n";
 		}
 		catch (...)
 		{

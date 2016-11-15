@@ -81,7 +81,7 @@ public:
 	void setByte(uint8_t i, uint8_t value)
 	{
 		memory[i] = value;
-		std::cout << "Set byte " << static_cast<uint16_t>(i) << " to " << static_cast<uint16_t>(value) <<  "\n";
+		//std::cout << "Set byte " << static_cast<uint16_t>(i) << " to " << static_cast<uint16_t>(value) <<  "\n";
 	}
 
 	bool loadFromFileObject(std::ifstream &file)
@@ -269,7 +269,7 @@ private:
 	//0x00 0000_0000 -- nop
 	void opNop(uint8_t, uint8_t)
 	{
-		//std::cout << "No op.\n";
+		std::cout << "No op.\n";
 
 		++program_counter;
 	}
@@ -277,7 +277,7 @@ private:
 	//0x01 0000_0001 -- halt
 	void opHalt(uint8_t, uint8_t)
 	{
-		//std::cout << "[opHalt()] Halted.\n";
+		std::cout << "[opHalt()] Halted.\n";
 
 		running = false; //It's really that simple.
 		//Do not increment program counter.
@@ -286,7 +286,7 @@ private:
 	//0x5? 0101_xxyy -- x = y
 	void opAssignDirect(uint8_t x, uint8_t y)
 	{
-		//std::cout << "[opAssignDirect()] Assign reg to reg (" << static_cast<uint16_t>(x) << ", " << static_cast<uint16_t>(y) << ")\n"; //Casting because uint8_t = char.
+		std::cout << "[opAssignDirect()] Assign reg to reg (" << static_cast<uint16_t>(x) << ", " << static_cast<uint16_t>(y) << ")\n"; //Casting because uint8_t = char.
 
 		regbank.setRegister(x, regbank.getRegister(y));
 		++program_counter;
@@ -295,7 +295,7 @@ private:
 	//0x6? 0110_00xx -- PC = x iff L=1
 	void opPCL(uint8_t x, uint8_t y)
 	{
-		//std::cout << "[opPCL()] PC = value of register " << static_cast<uint16_t>(x) << " iff L = 1\n";
+		std::cout << "[opPCL()] PC = value of register " << static_cast<uint16_t>(x) << " iff L = 1\n";
 
 		if (alu.getLFlag())
 		{
@@ -310,7 +310,7 @@ private:
 	//0x6? 0110_01xx -- PC = x iff O=1
 	void opPCO(uint8_t x, uint8_t y)
 	{
-		//std::cout << "[opPCO()] PC = value of register " << static_cast<uint16_t>(x) << " iff O = 1\n";
+		std::cout << "[opPCO()] PC = value of register " << static_cast<uint16_t>(x) << " iff O = 1\n";
 
 		if (alu.getOFlag())
 		{
@@ -325,7 +325,7 @@ private:
 	//0x6? 0110_10xx -- PC = x iff S=1
 	void opPCS(uint8_t x, uint8_t y)
 	{
-		//std::cout << "[opPCS()] PC = value of register " << static_cast<uint16_t>(x) << " iff S = 1\n";
+		std::cout << "[opPCS()] PC = value of register " << static_cast<uint16_t>(x) << " iff S = 1\n";
 
 		if (alu.getSFlag())
 		{
@@ -340,7 +340,7 @@ private:
 	//0x6? 0110_11xx -- X = (*(PC++))
 	void opLDI(uint8_t x, uint8_t y)
 	{
-		//std::cout << "[opLDI()] Register " << static_cast<uint16_t>(x) << " = LDI.\n";
+		std::cout << "[opLDI()] Register " << static_cast<uint16_t>(x) << " = 0x" << std::hex << static_cast<uint16_t>(ram.getByte(program_counter + 1)) << std::dec << ".\n";
 
 		regbank.setRegister(x, ram.getByte(++program_counter));
 		++program_counter;
@@ -349,7 +349,7 @@ private:
 	//0x7? 0111_xxyy -- x = *y
 	void opLD(uint8_t x, uint8_t y)
 	{
-		//std::cout << "[opLD()] Register " << static_cast<uint16_t>(x) << " = LD register " << static_cast<uint16_t>(y) << ".\n";
+		std::cout << "[opLD()] Register " << static_cast<uint16_t>(x) << " = LD register " << static_cast<uint16_t>(y) << ".\n";
 
 		regbank.setRegister(x, ram.getByte(regbank.getRegister(y)));
 		++program_counter;
@@ -358,7 +358,7 @@ private:
 	//0x8? 1000_xxyy -- x += y
 	void opAdd(uint8_t x, uint8_t y)
 	{
-		//std::cout << "[opADD()] Register " << static_cast<uint16_t>(x) << " += register " << static_cast<uint16_t>(y) << ".\n";
+		std::cout << "[opADD()] Register " << static_cast<uint16_t>(x) << " += register " << static_cast<uint16_t>(y) << ".\n";
 
 		regbank.setRegister(x, alu.add(regbank.getRegister(x), regbank.getRegister(y), false));
 		++program_counter;
@@ -367,7 +367,7 @@ private:
 	//0x9? 1001_xxyy -- x -= y
 	void opSub(uint8_t x, uint8_t y)
 	{
-		//std::cout << "[opSUB()] Register " << static_cast<uint16_t>(x) << " -= register " << static_cast<uint16_t>(y) << ".\n";
+		std::cout << "[opSUB()] Register " << static_cast<uint16_t>(x) << " -= register " << static_cast<uint16_t>(y) << ".\n";
 
 		regbank.setRegister(x, alu.sub(regbank.getRegister(x), regbank.getRegister(y), false));
 		++program_counter;
@@ -376,7 +376,7 @@ private:
 	//0xA? 1010_xxyy -- x >>= y
 	void opRightShift(uint8_t x, uint8_t y)
 	{
-		//std::cout << "[opRightShift()] Register " << static_cast<uint16_t>(x) << " >>= register " << static_cast<uint16_t>(y) << ".\n";
+		std::cout << "[opRightShift()] Register " << static_cast<uint16_t>(x) << " >>= register " << static_cast<uint16_t>(y) << ".\n";
 
 		regbank.setRegister(x, alu.bitwiseRightShift(regbank.getRegister(x), regbank.getRegister(y), false));
 
@@ -386,7 +386,7 @@ private:
 	//0xB? 1011_xx00 -- x = ~x
 	void opBitwiseNot(uint8_t x, uint8_t y)
 	{
-		//std::cout << "[opBitwiseNot()] Register " << static_cast<uint16_t>(x) << " = ~register " << static_cast<uint16_t>(x) << ".\n";
+		std::cout << "[opBitwiseNot()] Register " << static_cast<uint16_t>(x) << " = ~register " << static_cast<uint16_t>(x) << ".\n";
 
 		regbank.setRegister(x, alu.bitwiseNot(regbank.getRegister(x), false));
 		++program_counter;
@@ -395,7 +395,7 @@ private:
 	//0xB? 1011_xx01 -- PC = x
 	void opJMP(uint8_t x, uint8_t y)
 	{
-		//std::cout << "[opJMP()] PC = register " << static_cast<uint16_t>(x) << ".\n";
+		std::cout << "[opJMP()] PC = register " << static_cast<uint16_t>(x) << ".\n";
 
 		program_counter = regbank.getRegister(x);
 	}
@@ -403,7 +403,7 @@ private:
 	//0xB? 1011_xx10 -- PC = x iff C=1
 	void opPCC(uint8_t x, uint8_t y)
 	{
-		//std::cout << "[opPCC()] PC = value of register " << static_cast<uint16_t>(x) << " iff C = 1\n";
+		std::cout << "[opPCC()] PC = value of register " << static_cast<uint16_t>(x) << " iff C = 1\n";
 
 		if (alu.getCFlag())
 		{
@@ -418,7 +418,7 @@ private:
 	//0xB? 1011_xx11 -- PC = x iff Z=1
 	void opPCZ(uint8_t x, uint8_t y)
 	{
-		//std::cout << "opPCZ[()] PC = value of register " << static_cast<uint16_t>(x) << " iff Z = 1\n";
+		std::cout << "opPCZ[()] PC = value of register " << static_cast<uint16_t>(x) << " iff Z = 1\n";
 
 		if (alu.getZFlag())
 		{
@@ -433,7 +433,7 @@ private:
 	//0xC? 1100_xxyy -- x &= y
 	void opBitwiseAnd(uint8_t x, uint8_t y)
 	{
-		//std::cout << "[opBitwiseAnd()] Register " << static_cast<uint16_t>(x) << " &= register " << static_cast<uint16_t>(y) << ".\n";
+		std::cout << "[opBitwiseAnd()] Register " << static_cast<uint16_t>(x) << " &= register " << static_cast<uint16_t>(y) << ".\n";
 
 		regbank.setRegister(x, alu.bitwiseAnd(regbank.getRegister(x), regbank.getRegister(y), false));
 
@@ -443,7 +443,7 @@ private:
 	//0xD? 1101_xxyy -- x |= y
 	void opBitwiseOr(uint8_t x, uint8_t y)
 	{
-		//std::cout << "[opBitwiseOr()] Register " << static_cast<uint16_t>(x) << " |= register " << static_cast<uint16_t>(y) << ".\n";
+		std::cout << "[opBitwiseOr()] Register " << static_cast<uint16_t>(x) << " |= register " << static_cast<uint16_t>(y) << ".\n";
 
 		regbank.setRegister(x, alu.bitwiseOr(regbank.getRegister(x), regbank.getRegister(y), false));
 
@@ -453,7 +453,7 @@ private:
 	//0xE? 1110_xxyy -- x - y (no store)
 	void opCMP(uint8_t x, uint8_t y)
 	{
-		//std::cout << "[opCMP()] Register " << static_cast<uint16_t>(x) << " - register " << static_cast<uint16_t>(y) << " (no store).\n";
+		std::cout << "[opCMP()] Register " << static_cast<uint16_t>(x) << " - register " << static_cast<uint16_t>(y) << " (no store).\n";
 
 		alu.sub(regbank.getRegister(x), regbank.getRegister(y), false);
 		++program_counter;
@@ -462,7 +462,7 @@ private:
 	//0xF? 1111_xxyy -- *y = x
 	void opSetRAM(uint8_t x, uint8_t y)
 	{
-		//std::cout << "[opSetRAM()] Ram pointed to by register " << static_cast<uint16_t>(y) << " = value of register " << static_cast<uint16_t>(x) << ".\n";
+		std::cout << "[opSetRAM()] Ram pointed to by register " << static_cast<uint16_t>(y) << " (0x" << std::hex << static_cast<uint16_t>(regbank.getRegister(y)) << std::dec << ") = value of register " << static_cast<uint16_t>(x) << " (0x" << std::hex << static_cast<uint16_t>(regbank.getRegister(x)) << std::dec << ").\n";
 
 		ram.setByte(regbank.getRegister(y), regbank.getRegister(x));
 		++program_counter;
@@ -586,7 +586,7 @@ public:
 			return;
 		}
 
-		std::cout << "Hex representation: 0x" << std::hex << static_cast<uint16_t>(opcode) << std::dec << " *** \n";
+		std::cout << "Hex representation: 0x" << std::hex << static_cast<uint16_t>(opcode) << std::dec << " *** ";
 
 		//Specific cases:
 		if (opcode >= 0x50 && opcode <= 0x5F) //Register x = y

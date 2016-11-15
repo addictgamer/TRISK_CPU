@@ -1,0 +1,18 @@
+G1:
+LDI A int1
+LDI B 0
+LD A A
+
+LDI C L1
+CMP B A
+PCL C
+PCZ C
+
+SUB B A
+LDI A int1
+RAM B A
+
+L1:
+	halt
+int1:
+	BYTE 246
