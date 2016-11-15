@@ -42,7 +42,7 @@ G1:
 ; end while.
 G2:
 	LDI A 255
-	RAM C A
+	ST A C
 	HALT
 
 

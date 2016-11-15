@@ -1,4 +1,3 @@
-G1:
 LDI A int1
 LDI B 0
 LD A A
@@ -10,9 +9,9 @@ PCZ C
 
 SUB B A
 LDI A int1
-RAM B A
+ST A B
 
 L1:
 	halt
 int1:
-	BYTE 246
+	BYTE -10

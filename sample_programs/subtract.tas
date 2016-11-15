@@ -5,6 +5,6 @@ LDI C 255
 
 SUB A B ; A -= B 
 
-RAM A C ; Store result
+ST C A ; Store result
 
 HALT

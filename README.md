@@ -3,7 +3,7 @@ An emulator and assembler for a simple 8-bit RISC designed in Dr Tak's Computer 
 
 ### Building
 
-Use CMAKE. On linux, the lazy out there can run `./lm`
+Use CMAKE. On linux, the lazy out there can run `./lmr`
 
 ### Usage
 
@@ -47,7 +47,7 @@ PCZ <X>			[PC = X iff Z = 1] Sets program counter to address pointed to by regis
 AND <X> <Y>		[X &= Y]
 OR <X> <Y>		[X |= Y]
 CMP <X> <Y>		[X - Y] (no store -- only sets flags)
-RAM <X> <Y>		[*X = Y] Sets RAM pointed to by register X to Y.
+ST <X> <Y>		[*X = Y] Sets RAM pointed to by register X to Y.
 ```
 
-Refer to beginning of `src/assembler/assembler.cpp` for complete syntax and notes.
+Refer to beginning of `src/assembler/assembler.cpp` for complete assembly syntax and notes.

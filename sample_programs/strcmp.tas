@@ -1,0 +1,75 @@
+; This program implements the following C function:
+;
+;	int strcmp(const char *p1, const char *p2)
+;	{
+;		while (*p1 && (*p1 == *p2))
+;		{
+;			++p1;
+;			++p2;
+;		}
+;		return *p1 - *p2;
+;	}
+
+; Return value is stored in register A and RAM location 255
+
+; Initialize registers.
+LDI B p1
+LDI C p2
+
+G0:
+
+	; if (*B == 0) goto G1;
+	LDI A 0
+	LD D B
+	CMP D A
+	LDI A G1
+	PCZ A
+
+	; if (*B != *C) goto G1;
+	LD A C
+	CMP D A
+	LDI A G2
+	PCZ A ; if *B == *C goto G2
+	; If we are here, *B != *C
+	LDI A G1 ; If *B != *C goto G1
+	JMP A
+
+G2:
+	; ++B
+	LDI A 1
+	ADD B A
+	; ++C
+	ADD C A
+	; goto G0
+	LDI A G0
+	JMP A
+
+G1:
+	; return *p1 - *p2;
+
+	; A = *B - *C
+	LD A B
+	LD D C
+	SUB A D
+	LDI D 255 ; Result is stored at end of memory.
+	ST D A
+
+halt ; Supports lowercase too.
+
+
+; Program data.
+p1:
+	; String 1: "Jeeb\0"
+	BYTE 74
+	BYTE 101
+	BYTE 101
+	BYTE 98
+	BYTE 0
+
+p2:
+	; String 2: "Jeec\0"
+	BYTE 74
+	BYTE 101
+	BYTE 101
+	BYTE 99
+	BYTE 0

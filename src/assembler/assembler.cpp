@@ -32,7 +32,7 @@
  *		AND <X> <Y>		[X &= Y]
  *		OR <X> <Y>		[X |= Y]
  *		CMP <X> <Y>		[X - Y] (no store -- only sets flags)
- *		RAM <X> <Y>		[*X = Y] Sets RAM pointed to by register X to Y.
+ *		ST <X> <Y>		[*X = Y] Sets RAM pointed to by register X to Y.
  *
  *	To allocate data:
  *		BYTE <x>
@@ -732,7 +732,7 @@ struct irRAM : public Instruction
 {
 	irRAM()
 	{
-		name = "RAM";
+		name = "ST";
 		instruction_size = 1;
 		num_parameters = 2;
 	}
@@ -758,7 +758,7 @@ struct irRAM : public Instruction
 			return 0;
 		}
 
-		memory[address] = 0xF0 + (reg1 << 2) + (reg2);
+		memory[address] = 0xF0 + (reg2 << 2) + (reg1);
 		++address;
 
 		return instruction_size;
