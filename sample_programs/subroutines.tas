@@ -1,0 +1,80 @@
+; This program does the following:
+; int x;
+;
+; void func() {
+;   if (x > 0) {
+;     --x;
+;     f();
+;   }
+;   return;
+; }
+;
+; int main()
+; {
+;   x = 2;
+;   func();
+;   return;
+; }
+;
+; D is our stack pointer.
+
+LDI D 0 ; Initialize stack pointer. In the real world, OS would initialize the stack pointer.
+
+; int main() {}
+main:
+	; x = 2
+	LDI A var_x
+	LDI B 2
+	ST A B
+
+	; func();
+	; First, need to push the return address to the stack.
+	LDI A 1
+	SUB D A
+	LDI A retAddr1
+	ST D A
+	; Now move execution to func();
+	LDI A func
+	JMP A
+	
+	; return;
+retAddr1:
+	halt ; Just halt, because no greater operating system/function to return to.
+
+; void func() {}
+func:
+	; if (x > 0) {
+	LDI A var_x
+	LD B A
+	LDI A 0
+	SUB B A
+	LDI A else
+	PCZ A ; if x - 0 == 0, go to else statement.
+
+	; --x;
+	LDI A 1
+	SUB B A
+	LDI A var_x
+	ST A B
+
+	; f();
+	; First, need to push the return address to the stack.
+	LDI A 1
+	SUB D A
+	LDI A retAddr2
+	ST D A
+	; Now move execution to func();
+	LDI A func
+	JMP A
+
+retAddr2:
+
+else: ; Not really an else, just continues execution of the function.
+	; return
+	LD A D ; retrieve stack pointer
+	LDI B 1
+	ADD D B ; increment stack pointer
+	JMP A ; get out
+
+var_x:
+    BYTE 0
