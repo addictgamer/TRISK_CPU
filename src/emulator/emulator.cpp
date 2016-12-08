@@ -349,7 +349,7 @@ private:
 	//0x7? 0111_xxyy -- x = *y
 	void opLD(uint8_t x, uint8_t y)
 	{
-		std::cout << "[opLD()] Register " << static_cast<uint16_t>(x) << " = LD register " << static_cast<uint16_t>(y) << ".\n";
+		std::cout << "[opLD()] Register " << static_cast<uint16_t>(x) << " = LD register " << static_cast<uint16_t>(y) << " (0x" << std::hex << static_cast<uint16_t>(ram.getByte(regbank.getRegister(y))) << std::dec << ").\n";
 
 		regbank.setRegister(x, ram.getByte(regbank.getRegister(y)));
 		++program_counter;
@@ -367,10 +367,12 @@ private:
 	//0x9? 1001_xxyy -- x -= y
 	void opSub(uint8_t x, uint8_t y)
 	{
-		std::cout << "[opSUB()] Register " << static_cast<uint16_t>(x) << " -= register " << static_cast<uint16_t>(y) << ".\n";
+		std::cout << "[opSUB()] Register " << static_cast<uint16_t>(x) << " -= register " << static_cast<uint16_t>(y) << ". Result: (0x";
 
 		regbank.setRegister(x, alu.sub(regbank.getRegister(x), regbank.getRegister(y), false));
 		++program_counter;
+		
+		 std::cout << std::hex << static_cast<uint16_t>(regbank.getRegister(x)) << std::dec << ")\n";
 	}
 
 	//0xA? 1010_xxyy -- x >>= y
@@ -395,7 +397,7 @@ private:
 	//0xB? 1011_xx01 -- PC = x
 	void opJMP(uint8_t x, uint8_t y)
 	{
-		std::cout << "[opJMP()] PC = register " << static_cast<uint16_t>(x) << ".\n";
+		std::cout << "[opJMP()] PC = register " << static_cast<uint16_t>(x) << " (" << std::hex << static_cast<uint16_t>(regbank.getRegister(x)) << std::dec << ").\n";
 
 		program_counter = regbank.getRegister(x);
 	}
@@ -418,16 +420,22 @@ private:
 	//0xB? 1011_xx11 -- PC = x iff Z=1
 	void opPCZ(uint8_t x, uint8_t y)
 	{
-		std::cout << "opPCZ[()] PC = value of register " << static_cast<uint16_t>(x) << " iff Z = 1\n";
+		std::cout << "opPCZ[()] PC = value of register " << static_cast<uint16_t>(x) << " iff Z = 1 (";
+		
+		
 
 		if (alu.getZFlag())
 		{
+			std::cout << "true";
 			program_counter = regbank.getRegister(x);
 		}
 		else
 		{
+			std::cout << "false";
 			++program_counter;
 		}
+
+		std::cout << ")\n";
 	}
 
 	//0xC? 1100_xxyy -- x &= y
@@ -762,8 +770,15 @@ int main(int argc, char **argv)
 	    that instruction represents.
 	 */
 
-	std::string input_file = "program.bin";
-	std::string output_file = "ram.bin";
+	//std::string input_file = "program.bin";
+	//std::string output_file = "ram.bin";
+
+	std::string input_file;
+	std::string output_file;
+
+	/*
+	 * If no inputs, then grab in the input file from stdin.
+	 */
 
 	//I'm going to set a hard limit on the command line arguments to 3 (2 actual useable arguments) for now.
 	if (argc > 3)
@@ -777,7 +792,7 @@ int main(int argc, char **argv)
 		if (!strcmp(argv[1], "-h"))
 		{
 			displayUsageInstructions(input_file, output_file);
-			return 0;
+			return 1;
 		}
 	}
 
