@@ -1,0 +1,85 @@
+; This assembly program implements the following C subroutine:
+; uint8_t five()
+; {
+;	return 5;
+; }
+;
+; uint8_t main()
+; {
+;	register uint8_t a;
+;	a = five() + five();
+; }
+;
+;
+; Assume this architecture's convention is to store return values in the register A.
+; Register D is the stack pointer.
+
+; Initialize computer.
+LDI A 0
+LDI B 0
+LDI C 0
+LDI D 0 ; Init stack pointer.
+; Note that in this architecture, this is not strictly necessary, since the processor always starts with everything zero'd out.
+
+main:
+	; call first five()
+	; First, allocate return address on stack.
+	LDI A 1
+	SUB D A
+	LDI A retAddr1
+	ST D A ; push the return address to the stack
+
+	; stack stuff done, now call the function!
+	LDI A five ; grab the function's address
+	JMP A
+
+	retAddr1:
+	; returned from first call to "five"
+	; reg a has the return value of the first call to "five"
+	; we want to store it onto the stack
+	LDI B 1
+	SUB D B
+	ST D A ; the return value of the first call is saved on stack
+
+	; call the second five
+	LDI A 1
+	SUB D A
+	LDI A retAddr2
+	ST D A ; push the return address to the stack
+
+	; stack stuff done, now call the function!
+	LDI A five ; grab the function's address
+	JMP A
+
+	retAddr2:
+	; returned from second call to "five"
+	; reg a has the return value of the second call to "five"
+	; the return value of the second call to "five" is on the stack
+
+	; step 1: pop the return value of the first call to "five" off the stack
+	; want to do: A += *(PC++)
+	LD B D ; Grab the value of the first call to "five" & store it in register B.
+	ADD A B ; A now has the value of: five() + five()
+
+	LDI B 1
+	ADD D B ; increment stack pointer
+
+	; Store the result in RAM at variable/location "result"
+	LDI B result
+	ST B A
+
+	HALT
+
+
+five:
+	; return 5
+	LDI A 5 ; store return value
+	; deal with stack pointer
+	LD B D ; grab element pointed to by stack pointer (address to return to)
+	LDI C 1 ; for ++B
+	ADD D C ; ++B, increment stack pointer
+	JMP B ; jump to return address
+	; would be neat to have a 'ret' instruction.
+
+result:
+	BYTE 0

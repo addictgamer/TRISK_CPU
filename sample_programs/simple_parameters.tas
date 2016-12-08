@@ -1,0 +1,60 @@
+; This assembly program implements the following C program (demonstrating the implementation of sample parameters)
+; uint8_t sum(register uint8_t a, register uint_8 b)
+; {
+;	return a + b;
+; }
+; D is the stack pointer.
+; A is the return value.
+
+
+; Invocation of this function:
+
+LDI D 0 ; Initialize stack
+
+main:
+	; initialize parameters
+	LDI A 4
+	LDI B 5
+
+	; sum(A, B)
+	; allocate space on the stack
+	LDI C 1
+	SUB D C
+	; push return address onto stack
+	LDI C retAddr1
+	ST D C
+	; jump the the subroutine
+	LDI C sum
+	JMP C
+
+	retAddr1:
+	; store result in RAM at location/variable "result".
+	; Simplifies debugging with the emulator, otherwise unnecessary if simulating the actual processor circuit.
+	LDI B result
+	ST B A
+
+	halt
+
+
+
+; uint8_t sum(register uint8_t a, register uint_8 b)
+sum:
+	; register a has parameter a,
+	; register b has parameter b.
+
+	; return a + b;
+	ADD A B ; a += b. a now is: a = a + b;
+	; register A is the return value
+
+	; Grab return address from stack & jump
+	; B = *(PC++)
+	LD B D
+	LDI C 1
+	ADD D C ; increment stack pointer
+
+	JMP B
+
+
+; makes debugging with the emulator easier
+result:
+	BYTE 0
