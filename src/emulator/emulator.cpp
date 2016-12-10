@@ -232,17 +232,56 @@ public:
 
 	uint8_t bitwiseRightShift(uint8_t x, uint8_t count, bool cin = false)
 	{
-		return x >> count;
+		x >>= count;
+
+		//Only z & c flag can change.
+		bool z = (x == 0x00) ? 1 : 0;
+		bool s = checkBit(x, 7); //Most significant bit.
+
+		//o, c, l = input.
+		bool c = getCFlag();
+		bool o = getOFlag();
+		bool l = getLFlag();
+
+		setFlags(c, z, s, o, l);
+
+		return x;
 	}
 
 	uint8_t bitwiseAnd(uint8_t x, uint8_t y, bool cin = false)
 	{
-		return x & y;
+		x &= y;
+
+		//Only z & c flag can change.
+		bool z = (x == 0x00) ? 1 : 0;
+		bool s = checkBit(x, 7); //Most significant bit.
+
+		//o, c, l = input.
+		bool c = getCFlag();
+		bool o = getOFlag();
+		bool l = getLFlag();
+
+		setFlags(c, z, s, o, l);
+
+		return x;
 	}
 
 	uint8_t bitwiseOr(uint8_t x, uint8_t y, bool cin = false)
 	{
-		return x | y;
+		x |= y;
+
+		//Only z & c flag can change.
+		bool z = (x == 0x00) ? 1 : 0;
+		bool s = checkBit(x, 7); //Most significant bit.
+
+		//o, c, l = input.
+		bool c = getCFlag();
+		bool o = getOFlag();
+		bool l = getLFlag();
+
+		setFlags(c, z, s, o, l);
+
+		return x;
 	}
 };
 
@@ -358,9 +397,12 @@ private:
 	//0x8? 1000_xxyy -- x += y
 	void opAdd(uint8_t x, uint8_t y)
 	{
-		std::cout << "[opADD()] Register " << static_cast<uint16_t>(x) << " += register " << static_cast<uint16_t>(y) << ".\n";
+		std::cout << "[opADD()] Register " << static_cast<uint16_t>(x) << " += register " << static_cast<uint16_t>(y);
 
 		regbank.setRegister(x, alu.add(regbank.getRegister(x), regbank.getRegister(y), false));
+
+		std::cout << " (result: 0x" << static_cast<uint16_t>(regbank.getRegister(x)) << ").\n";
+
 		++program_counter;
 	}
 
@@ -371,16 +413,18 @@ private:
 
 		regbank.setRegister(x, alu.sub(regbank.getRegister(x), regbank.getRegister(y), false));
 		++program_counter;
-		
+
 		 std::cout << std::hex << static_cast<uint16_t>(regbank.getRegister(x)) << std::dec << ")\n";
 	}
 
 	//0xA? 1010_xxyy -- x >>= y
 	void opRightShift(uint8_t x, uint8_t y)
 	{
-		std::cout << "[opRightShift()] Register " << static_cast<uint16_t>(x) << " >>= register " << static_cast<uint16_t>(y) << ".\n";
+		std::cout << "[opRightShift()] Register " << static_cast<uint16_t>(x) << " >>= register " << static_cast<uint16_t>(y) << ".";
 
 		regbank.setRegister(x, alu.bitwiseRightShift(regbank.getRegister(x), regbank.getRegister(y), false));
+
+		std::cout << " (result : 0x" << static_cast<uint16_t>(regbank.getRegister(x)) << ")\n";
 
 		++program_counter;
 	}
@@ -420,9 +464,9 @@ private:
 	//0xB? 1011_xx11 -- PC = x iff Z=1
 	void opPCZ(uint8_t x, uint8_t y)
 	{
-		std::cout << "opPCZ[()] PC = value of register " << static_cast<uint16_t>(x) << " iff Z = 1 (";
-		
-		
+		std::cout << "[opPCZ[()] PC = value of register " << static_cast<uint16_t>(x) << " iff Z = 1 (";
+
+
 
 		if (alu.getZFlag())
 		{
@@ -441,9 +485,11 @@ private:
 	//0xC? 1100_xxyy -- x &= y
 	void opBitwiseAnd(uint8_t x, uint8_t y)
 	{
-		std::cout << "[opBitwiseAnd()] Register " << static_cast<uint16_t>(x) << " &= register " << static_cast<uint16_t>(y) << ".\n";
+		std::cout << "[opBitwiseAnd()] Register " << static_cast<uint16_t>(x) << " &= register " << static_cast<uint16_t>(y);
 
 		regbank.setRegister(x, alu.bitwiseAnd(regbank.getRegister(x), regbank.getRegister(y), false));
+
+		std::cout << " (result: 0x" << static_cast<uint16_t>(regbank.getRegister(x)) << ").\n";
 
 		++program_counter;
 	}

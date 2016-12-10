@@ -1,0 +1,121 @@
+; This program implements the following C program:
+;
+; uint8_t mult(register uint8_t a, register uint8_t b)
+; {
+;	uint8_t result;
+;	result = (a&1) ? b : 0;
+;	b <<= 1;
+;	while ((a = a>>1) != 0) // add B up A times.
+;	{
+;		result += (a & 1) ? b : 0;
+;		b <<= 1;
+;	}
+;	return result; // as register a
+; }
+;
+; Assume:
+;  * Register A is the return value
+;  * Register D is the stack pointer
+
+LDI D 0
+
+main:
+	LDI A 255
+	LDI B 0
+	; Do 5 * 4. Should return 20.
+
+	; mult()
+	LDI C 1
+	SUB D C
+	LDI C mainMultReturnAddr1
+	ST D C
+	LDI C mult
+	JMP C
+
+	mainMultReturnAddr1:
+	; A now contains result.
+
+	; save result in RAM, for debugging purposes.
+	LDI C result
+	ST C A
+
+	halt
+
+
+
+
+
+; uint8_t mult(register uint8_t a, register uint8_t b)
+; register A = num 1, register B = num 2
+; function: multiple A * B and store result back into register A
+mult:
+	; uint8_t result;
+	; need to allocate memory for this variable
+	; create space on stack!
+	LDI C 1
+	SUB D C
+
+	; result = (a&1) ? b : 0;
+	; basically saying: if A & 1 != 0, result = B. Else If A&1 == 0, result = 0
+	LDI C 1
+	AND C A
+	LDI C multElse1
+	PCZ C
+	; (A&1) == true, therefore RESULT = B
+	ST D B ; save result onto stack.
+	LDI C multEndIf1
+	JMP C
+
+	multElse1:
+	; Set result equal to 0
+	LDI C 0
+	ST D C
+	; Fallthrough to endIf1.
+
+	multEndIf1:
+	; So right here, the stack currently points to result.
+
+	; b <<= 1;
+	ADD B B ; leftshifts are easy :)
+
+	; while ((a = a>>1) != 0)
+	multWhileLoop:
+	; a = a >> 1
+	; then check if a != 0
+	LDI C 1
+	RSHIFT A C ; a = a >> 1
+	LDI C multEndWhileLoop
+	PCZ  C ; if a == 0, GTFO.
+
+	; while loop body
+		; result += (a & 1) ? b : 0;
+		LDI C 1
+		AND C A ; C = A & 1
+		LDI C multDoNotAdd
+		PCZ C ; if (A & 1) == 0, then skip ahead.
+		LD C D ; C = result
+		ADD C B ; result += b
+		ST D C ; save new value of result
+
+		multDoNotAdd:
+		; for the else case, don't touch result. Doing nothing is equivalent to adding 0. :)
+
+		; b <<= 1;
+		ADD B B ; leftshifts are easy :)
+
+		; this is the magic that makes a loop even possible:
+		LDI C multWhileLoop
+		JMP C
+
+	multEndWhileLoop:
+	; return result;
+	LD A D ; A = result
+	LDI C 1
+	ADD D C ; move back up stack
+	LD B D ; grab return address
+	LDI C 1
+	ADD D 1 ; move back up stack
+	JMP B ; return to caller!
+
+result:
+	BYTE 0
