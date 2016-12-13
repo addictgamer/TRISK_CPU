@@ -114,7 +114,7 @@ mult:
 	ADD D C ; move back up stack
 	LD B D ; grab return address
 	LDI C 1
-	ADD D 1 ; move back up stack
+	ADD D C ; move back up stack
 	JMP B ; return to caller!
 
 result:

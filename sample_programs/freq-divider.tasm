@@ -1,0 +1,117 @@
+; Implements the following c program:
+;
+; uint8_t f, b, t, c;
+;
+; int main()
+; {
+;	f = 10;		// desired frequency of an action
+;	b = 20;		// base frequency of timer
+;	t = 0;		// counter for frequency division
+;	c = 7;		// how many times to perform the action
+;
+;	while (c != 0)
+;	{
+;		t += f;
+;		if (t >= b)
+;		{
+;			--c;
+;			t -= b;
+;		}
+;	}
+;	return 0;
+;}
+;
+
+
+
+LDI D 0 ; Initialize stack pointer
+; int main() {
+main:
+;	f = 10;		// desired frequency of an action
+	LDI C 10
+	LDI A var_f
+	ST A C
+;	b = 20;		// base frequency of timer
+	LDI C 20
+	LDI A var_b
+	ST A C
+;	t = 0;		// counter for frequency division
+	LDI C 0
+	LDI A var_t
+	ST A C
+;	c = 7;		// how many times to perform the action
+	LDI C 7
+	LDI A var_c
+	ST A C
+
+	LDI A var_c
+	LD A A
+	whileBegin:
+;	while (c != 0)
+	; Step 1: flatten!
+	; Basically: if (c == 0) then gtfo
+	LDI C 0
+	CMP A C ; var_c - 0 = ?
+	LDI C whileEnd
+	PCZ C
+	; {
+
+		; inside while body!
+;		t += f;
+		LDI B var_t
+		LD B B
+		LDI C var_f
+		LD C C
+		ADD B C ; t += f
+		LDI C var_t
+		ST C B
+;		if (t >= b)
+		; if (t < b), GTFO
+		LDI C var_b
+		LD C C
+		CMP B C ; var_t - var_b = ?
+		LDI C ifEnd
+		PCC C
+		; {
+;			--c;
+			LDI C 1
+			SUB A C; var_c -= 1
+			LDI C var_c
+			ST C A
+;			t -= b;
+			LDI C var_b
+			LD C C
+			SUB B C ; var_t -= var_b
+			LDI C var_t
+			ST C B
+;		}
+	ifEnd:
+		LDI C whileBegin
+		JMP C
+;	}
+whileEnd:
+
+
+
+;	return 0;
+	HALT
+;}
+
+
+
+
+
+
+
+; uint8_t f, b, t, c;
+var_f:
+	BYTE 0
+
+var_b:
+	BYTE 0
+
+var_t:
+	BYTE 0
+
+var_c:
+	BYTE 0

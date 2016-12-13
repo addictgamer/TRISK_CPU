@@ -1,0 +1,121 @@
+; This sample program implements the following C program:
+;
+; void swap(uint8_t *a, uint8_t *b)
+; {
+;	uint8_t t;
+;	t = *a;
+;	*a = *b;
+;	*b = t;
+; }
+;
+;
+; uint8_t x;
+; uint8_t y;
+;
+;
+; int main()
+; {
+;	// initialize the stack pointer
+;	x = 42;
+;	y = 77;
+;	swap(&x, &y);
+;	swap(&x, &y);
+;	return 0;
+; }
+;
+;
+; You may make the following assumptions:
+; d is the stack pointer
+; x and y are "global" variables (not on the stack)
+; t is local (supposed to be on the stack)
+; pass parameters a and b by registers (registers a and b, respectively)
+
+
+LDI D 0 ; Initialize stack pointer
+; int main() {
+main:
+;	x = 42;
+	LDI A x_var
+	LDI B 42
+	ST A B
+;	y = 77;
+	LDI A y_var
+	LDI B 77
+	ST A B
+;	swap(&x, &y);
+	LDI A x_var
+	LDI B y_var
+	; call swap
+	LDI C 1
+	SUB D C
+	LDI C mainRetAddr1
+	ST D C ; push the return address onto the stack
+	LDI C swap
+	JMP C ; swap(register A, register B)
+mainRetAddr1:
+;	swap(&x, &y);
+	LDI A x_var
+	LDI B y_var
+	LDI C 1
+	SUB D C
+	LDI C mainRetAddr2
+	ST D C ; push the return address onto the stack
+	LDI C swap
+	JMP C ; swap(register A, register B)
+mainRetAddr2:
+;	return 0;
+	HALT
+; }
+
+
+; void swap(uint8_t *a, uint8_t *b) {
+; So, register A points to x, register B points to y.
+swap:
+;	uint8_t t;
+	; allocate local variable t on the stack.
+	LDI C 1
+	SUB D C ; allocated space on the stack.
+;	t = *a;
+	; now store the initial value, a.
+	LD C A
+	ST D C ; t = *A
+;	*a = *b;
+	LD C B
+	ST A C ; *A = *B
+;	*b = t;
+	LD C D ; grab value of t
+	ST B C ; *B = t
+	LDI C 1
+	ADD D C ; de-allocate local variable t from stack
+
+	; implicit return
+	LD A D
+	LDI C 1
+	ADD D C ; Pop the return address off the stack.
+	JMP A ; Return to return address.
+; }
+; NOTE: So it seems you don't actually need variable t. It looks like we have just enough registers to perform the swap without it.
+; So...how the alternative would look:
+; swap:
+;	LD A A ; A = *A
+;	LD B B ; B = *B
+;	CPR C A ; C = A
+;	CPR A B ; A = B
+;	CPR B C ; B = C (basically, B = what A was originally)
+;	LD A D
+;	LDI C 1
+;	ADD D C
+;	JMP A
+
+
+
+
+; global variables
+; uint8_t x;
+x_var:
+	;BYTE 0
+	BYTE 42
+; uint8_t y;
+y_var:
+	;BYTE 0
+	BYTE 77

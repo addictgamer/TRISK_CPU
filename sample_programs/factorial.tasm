@@ -1,0 +1,195 @@
+; Implements the following C program:
+;
+; // difficulty: what happens when we run out of registers?
+; // difficulty: when do we save registers?
+; // difficulty: where do we save registers?
+; // difficulty: where do we restore registers?
+;
+; convention: register a is used for returning scalar types
+; convention: registers a, b are used to pass parameters
+; convention: caller is responsible to save registers
+; convention: register d is the stack pointer
+;
+;
+;int main() {
+;	register uint8_t a;
+;	a = fact(3);
+;}
+;
+;
+; uint8_t mult(register uint8_t a, register uint8_t b) {
+;	register uint8_t c;
+;	c = (a&1) ? b : 0;
+;	b <<= 1;
+;	while (a >>= 1)
+;	{
+;		c+=(a&1)?b:0;
+;		b <<= 1;
+;	}
+;	return c; // as register a
+;}
+;
+;
+; uint8_t fact(register uint8_t a) {
+;	if (a)
+;	{
+;		return mult(a,fact(a-1));  // as register a
+;	}
+;	else
+;	{
+;		return 1; // as register a
+;	}
+; }
+
+LDI D 0 ; Initialise stack pointer.
+;int main() {
+main:
+;	register uint8_t a;
+;	a = fact(3);
+	LDI C 1
+	SUB D C ; Make room on stack
+	LDI C mainRetAddr
+	ST D C ; save return address on the stack
+
+	LDI A 3
+	LDI C fact
+	JMP C ; fact(3)
+mainRetAddr:
+	; Register A now contains result of fact(3)
+	LDI C result
+	ST C A ; store result of fact() for easier debugging.
+	HALT
+; }
+
+
+; uint8_t mult(register uint8_t a, register uint8_t b)
+; register A = num 1, register B = num 2
+; function: multiple A * B and store result back into register A
+mult:
+	; uint8_t result;
+	; need to allocate memory for this variable
+	; create space on stack!
+	LDI C 1
+	SUB D C
+
+	; result = (a&1) ? b : 0;
+	; basically saying: if A & 1 != 0, result = B. Else If A&1 == 0, result = 0
+	LDI C 1
+	AND C A
+	LDI C multElse1
+	PCZ C
+	; (A&1) == true, therefore RESULT = B
+	ST D B ; save result onto stack.
+	LDI C multEndIf1
+	JMP C
+
+	multElse1:
+	; Set result equal to 0
+	LDI C 0
+	ST D C
+	; Fallthrough to endIf1.
+
+	multEndIf1:
+	; So right here, the stack currently points to result.
+
+	; b <<= 1;
+	ADD B B ; leftshifts are easy :)
+
+	; while ((a = a>>1) != 0)
+	multWhileLoop:
+	; a = a >> 1
+	; then check if a != 0
+	LDI C 1
+	RSHIFT A C ; a = a >> 1
+	LDI C multEndWhileLoop
+	PCZ  C ; if a == 0, GTFO.
+
+	; while loop body
+		; result += (a & 1) ? b : 0;
+		LDI C 1
+		AND C A ; C = A & 1
+		LDI C multDoNotAdd
+		PCZ C ; if (A & 1) == 0, then skip ahead.
+		LD C D ; C = result
+		ADD C B ; result += b
+		ST D C ; save new value of result
+
+		multDoNotAdd:
+		; for the else case, don't touch result. Doing nothing is equivalent to adding 0. :)
+
+		; b <<= 1;
+		ADD B B ; leftshifts are easy :)
+
+		; this is the magic that makes a loop even possible:
+		LDI C multWhileLoop
+		JMP C
+
+	multEndWhileLoop:
+	; return result;
+	LD A D ; A = result
+	LDI C 1
+	ADD D C ; move back up stack
+	LD B D ; grab return address
+	LDI C 1
+	ADD D C ; move back up stack
+	JMP B ; return to caller!
+; }
+
+
+
+; uint8_t fact(register uint8_t a) {
+fact:
+	; Register A contains (a)
+	LDI C 0
+	CMP A C
+	LDI C factElse
+	PCZ C ; if (a == 0) goto factElse
+;	if (a)
+;	{
+		; a != 0
+		; call mult(), and factorial(), and return result in register a.
+		; but first, need to store initial value of a.
+		LDI C 1
+		SUB D C
+		ST D A ; pushed a onto the stack
+;		return mult(a,fact(a-1));  // as register a
+		; So, first, call fact(a - 1) and pass the result to mult.
+		LDI C 1
+		SUB A C
+		LDI C 1
+		SUB D C ; allocate space on the stack
+		LDI C factRetAddr1
+		ST D C
+		LDI C fact
+		JMP C ; fact(a - 1)
+	factRetAddr1:
+		; Register A contains result of fact(a - 1)
+		; SET B A ; register B needs to contain that result
+		; LD A D ; retrieve initial value of A from the stack
+		LD B D
+		LDI C factRetAddr2
+		ST D C
+		LDI C mult
+		JMP C
+	factRetAddr2:
+		; register A now contains the value of mult(a, fact(a - 1))
+		; finally return!
+		LD B D ; grab the return address
+		LDI C 1
+		ADD D C
+		JMP B ; return mult(a, fact(a - 1))
+;	}
+;	else
+;	{
+	factElse:
+;		return 1; // as register a
+		LD B D ; grab return address
+		LDI C 1
+		ADD D C ; de-allocate from stack.
+		LDI A 1 ; return value
+		JMP B ; return 1
+;	}
+; }
+
+result:
+	BYTE 0
