@@ -1,0 +1,54 @@
+; add two 16 bit numbers:
+; x_hi += y_hi
+; x_lo += y_lo
+; if (x_lo + y_lo) // ends up with a carry
+;   x_hi += 1
+
+
+; x_hi += y_hi
+LDI C x_hi
+LDI D y_hi
+LD C C ; C = x_hi
+LD D D ; D = y_hi
+ADD C D
+; C now contains x_hi + y_hi
+
+; x_lo += y_lo
+LDI A x_lo
+LDI B y_lo
+LD A A
+LD B B
+ADD A B
+; A now contains x_lo + y_lo
+
+; if (x_lo + y_lo) //ends up with a carry
+LDI D carryBit
+PCC D
+LDI D end
+JMP D
+
+carryBit:
+	LDI D 1
+	ADD C B
+
+end:
+	; store results
+	LDI D x_lo
+	ST D A
+	LDI D x_hi
+	ST D C
+	halt
+
+
+; uint16_t x = 511
+; 511 = 0x100 + 0xff = 0b0000_0001_1111_1111
+x_lo:
+	BYTE 255 ; Least Significant Byte
+x_hi:
+	BYTE 1   ; Most Significant Byte
+; uint16_t y = 1
+; 1 = 0x001 = 0b0000_0000_0000_0000
+y_lo:
+	BYTE 1   ; LSB
+y_hi:
+	BYTE 0   ; MSB
