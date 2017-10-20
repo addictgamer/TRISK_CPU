@@ -1,5 +1,5 @@
 # TRISK_CPU
-An emulator and assembler for a simple 8-bit RISC designed in Dr Tak's Computer Architecture &amp; Assembly Class
+TRISK_CPU stands for Toy RISC CPU. This project is an emulator and assembler for a simple/toy 8-bit RISC designed in 2016.
 
 ### Building
 
